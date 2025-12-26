@@ -87,11 +87,11 @@ class Store:
         Store.write_versions(versions)
     
     @staticmethod
-    def get_version(version: str):
+    def get_version(func: lambda version: dict):
         """Get the installation directory for a specific version"""
         versions = Store.get_versions()
         for i, v in enumerate(versions):
-            if v["version"] == version:
+            if func(v):
                 return i, v
         return -1, None
     
