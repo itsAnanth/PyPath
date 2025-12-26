@@ -29,7 +29,7 @@ def handle_install(args):
             percent = min(100, (downloaded * 100) / total_size)
             mb_downloaded = downloaded / (1024 * 1024)
             mb_total = total_size / (1024 * 1024)
-            logger.info(f"\rDownloading: {percent:.1f}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)", end='', flush=True)
+            print(f"\rDownloading: {percent:.1f}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)", end='', flush=True)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         logger.debug(f"Downloading installer to temporary directory {tmpdir}")
