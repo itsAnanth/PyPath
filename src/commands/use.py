@@ -3,12 +3,17 @@ import logging
 from argparse import _SubParsersAction, ArgumentParser
 
 from src.scripts.store import Store
-from src.scripts.arch import detect_arch, is_windows
 
 logger = logging.getLogger("pvm.use")
 
 def handle_use(args):
-    index, version = Store.get_version(args.version)
+    
+    old_index, old_version = Store.get_version(lambda v: v.get("using") is True)
+    old_version['using'] = False
+
+    Store.set_version(old_version)
+    
+    index, version = Store.get_version(lambda v: v["version"] == args.version)
 
     if not version:
         logger.error(f"Version {args.version} is not installed. Use 'pvm list --all' to see available versions.")
@@ -36,7 +41,6 @@ def handle_use(args):
         f.write(f'"{python_exe}" -m pip %*\n')
     
     logger.info(f"Using Python {args.version}")
-
 
     version['using'] = True
     Store.set_version(version)
