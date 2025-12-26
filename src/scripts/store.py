@@ -32,8 +32,15 @@ class Store:
         if SHIMS_DIR not in user_path:
             new_path = f"{SHIMS_DIR};{user_path}"
 
-            set_user_path(new_path)
-            logger.debug(f"Added shims directory to user PATH: {SHIMS_DIR}")
+            try:
+                set_user_path(new_path)
+                logger.debug(f"Added shims directory to user PATH: {SHIMS_DIR}")
+            except ValueError as e:
+                logger.error(f"Failed to update PATH: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Unexpected error updating PATH: {e}")
+                raise
             
 
 
