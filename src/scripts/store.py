@@ -48,14 +48,6 @@ class Store:
     def get_pvm_root() -> str:
         return PVM_ROOT
     
-    @staticmethod
-    def sync():
-
-        versions = Store.get_versions()
-
-        # TODO: implement sync logic
-        pass
-
     
     @staticmethod
     def get_versions():
