@@ -3,6 +3,7 @@ import tempfile
 import urllib.request
 import logging
 import zipfile
+import re
 from argparse import _SubParsersAction, ArgumentParser
 
 from src.scripts.store import Store
@@ -10,12 +11,64 @@ from src.scripts.arch import detect_arch, is_windows
 
 logger = logging.getLogger("pvm.install")
 
+def validate_version_format(version: str) -> bool:
+    """Validate that version string matches expected format.
+    
+    Args:
+        version: Version string to validate (e.g., '3.11.0')
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    pattern = r'^\d+\.\d+\.\d+$'
+    return bool(re.match(pattern, version))
+
+
+def validate_zip_contents(zip_file: zipfile.ZipFile) -> bool:
+    """Validate zip file contents for security issues.
+    
+    Args:
+        zip_file: ZipFile object to validate
+        
+    Returns:
+        True if safe, False if suspicious content detected
+    """
+    for member in zip_file.namelist():
+        # Check for absolute paths
+        if member.startswith('/'):
+            logger.error(f"Suspicious zip entry with absolute path: {member}")
+            return False
+        
+        # Check for path traversal
+        if '..' in member:
+            logger.error(f"Suspicious zip entry with path traversal: {member}")
+            return False
+        
+        # Check for null bytes
+        if '\x00' in member:
+            logger.error(f"Suspicious zip entry with null byte: {member}")
+            return False
+    
+    return True
+
+
+
+
+
+
+
 def handle_install(args):
     arch = detect_arch()
-    # Use zip
-    installer_name = f"python-{args.version}-{arch}.zip"
     version = args.version
-    install_dir = args.dir
+    install_dir = os.path.abspath(args.dir)
+    
+    # Validate version format
+    if not validate_version_format(version):
+        logger.error(f"Invalid version format: {version}. Expected format: X.Y.Z (e.g., 3.11.0)")
+        return
+    
+    # Use zip
+    installer_name = f"python-{version}-{arch}.zip"
     url = f"https://www.python.org/ftp/python/{version}/{installer_name}"
 
     if os.path.isdir(install_dir):
@@ -45,12 +98,16 @@ def handle_install(args):
             return
         
         try:
-            
-
-            
-            # Extract zip file
+            # Validate and extract zip file
             logger.info(f"Extracting {installer_name} to {install_dir}...")
             with zipfile.ZipFile(installer_path, 'r') as zip_ref:
+                # Validate zip contents before extraction
+                logger.info("Validating zip contents...")
+                if not validate_zip_contents(zip_ref):
+                    logger.error("Zip file contains suspicious entries. Installation aborted.")
+                    return
+                logger.info("Zip contents validated successfully.")
+                
                 zip_ref.extractall(install_dir)
             
     
@@ -83,19 +140,14 @@ def install_command(sub_parser: _SubParsersAction[ArgumentParser]):
         help='Python version to install (e.g., 3.11.0)',
     )
 
+
+
     parser.add_argument(
         '--dir',
         help='Installation directory',
         required=True
     )
-
-    parser.add_argument(
-        '--gui',
-        help='Show installation progress gui',
-        action="store_true"
-    )
-
-
+    
     parser.set_defaults(func=handle_install)
 
     
