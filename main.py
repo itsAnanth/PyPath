@@ -5,6 +5,7 @@ from src.scripts.arch import is_windows
 from src.commands.list import list_command
 from src.commands.install import install_command
 from src.commands.use import use_command
+from src.commands.link import link_command
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -23,7 +24,7 @@ def cli():
     
     parser = argparse.ArgumentParser(
         prog="pvm",
-        description="A light weight python version manager for Windows."
+        description="A lightweight Python version manager for Windows. Install, manage, and switch between multiple Python versions with ease. Downloads official embeddable Python distributions, maintains isolated installations, and uses shims for seamless version switching without modifying system settings or registry."
     )
 
     subparsers = parser.add_subparsers(
@@ -35,6 +36,7 @@ def cli():
     list_command(subparsers)
     install_command(subparsers)
     use_command(subparsers)
+    link_command(subparsers)
 
 
     args = parser.parse_args()
